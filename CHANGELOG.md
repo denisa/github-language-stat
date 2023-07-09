@@ -20,3 +20,5 @@ Categories, defined in [changemap.json](.github/clq/changemap.json)):
 ## [1.0.0] - 2023-07-09
 ### Added
 - CI
+- emits csv with repository name, size and size per language
+
