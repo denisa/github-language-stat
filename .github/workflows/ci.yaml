@@ -40,7 +40,7 @@ jobs:
         mode: release
     - name: Validate the tag has not yet been used
       uses: denisa/semantic-tag-helper@v1
-      env:
+      with:
         mode: test
         tag: ${{ steps.clq-extract.outputs.tag }}
   tag:
@@ -55,7 +55,7 @@ jobs:
         changeMap: .github/clq/changemap.json
     - name: Create tags
       uses: denisa/semantic-tag-helper@v1
-      env:
+      with:
         mode: set
         tag: ${{ steps.clq-extract.outputs.tag }}
     - uses: ncipollo/release-action@v1
