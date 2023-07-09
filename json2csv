@@ -1,0 +1,41 @@
+#!/usr/bin/env perl
+
+use v5.34;
+use strict;
+use warnings;
+use utf8;
+
+use Text::CSV qw( csv );
+use JSON qw( decode_json );
+
+my %headers = (
+  "nameWithOwner" => 0,
+  "createdAt" => 1,
+  "diskUsage" => 2,
+  "languageCount" => 3.
+  );
+my @stat;
+my @repositories = @{ decode_json(<>) };
+
+foreach my $repo ( @repositories ) {
+  my @value;
+  foreach my $repoAttr ( "nameWithOwner", "createdAt", "diskUsage") {
+    $value[$headers{$repoAttr}] = $repo->{$repoAttr};
+  }
+
+  my @languages = @{$repo->{"languages"}->{"edges"}};
+  $value[$headers{"languageCount"}] = @languages;
+  foreach my $language ( @languages ) {
+    my $name = $language->{"node"}->{"name"};
+    $headers{$name} = keys %headers unless defined $headers{$name};
+    $value[$headers{$name}] = $language->{"size"};
+  }
+
+  no warnings 'uninitialized';
+  push @stat, join(", ", @value);
+  use warnings;
+}
+
+print join(", ", sort { $headers{$a} <=> $headers{$b} } keys(%headers) ), "\n";
+
+print join("\n", @stat)

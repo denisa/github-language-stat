@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eu
+
+gh api graphql --paginate --jq '.data.viewer.repositories.nodes' -f query='
+query($endCursor: String) {
+  viewer {
+    repositories(first: 100, after: $endCursor) {
+      nodes {
+        name
+        createdAt
+        nameWithOwner
+        diskUsage
+        languages(first: 100) {
+          edges {
+            node {
+              name
+            }
+           size
+          }
+        }
+      }
+      pageInfo {
+	    hasNextPage
+	    endCursor
+      }
+    }
+  }
+}
+'
