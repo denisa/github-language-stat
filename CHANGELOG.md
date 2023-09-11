@@ -7,18 +7,26 @@
 Keep the newest entry at top, format date according to ISO 8601: `YYYY-MM-DD`.
 
 Categories, defined in [changemap.json](.github/clq/changemap.json)):
-- _major_ release trigger:
+
+- *major* release trigger:
    - `Changed` for changes in existing functionality.
    - `Removed` for now removed features.
-- _minor_ release trigger:
+- *minor* release trigger:
    - `Added` for new features.
    - `Deprecated` for soon-to-be removed features.
-- _bug-fix_ release trigger:
+- *bug-fix* release trigger:
    - `Fixed` for any bug fixes.
    - `Security` in case of vulnerabilities.
 
+## [1.0.1] - 2023-09-11
+
+### Fixed
+
+- Bump actions/checkout from v3 to v4
+
 ## [1.0.0] - 2023-07-09
+
 ### Added
+
 - CI
 - emits csv with repository name, size and size per language
-
