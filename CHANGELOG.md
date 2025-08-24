@@ -23,6 +23,7 @@ Categories, defined in [changemap.json](.github/clq/changemap.json)):
 ### Fixed
 
 - Bump actions/checkout from v4 to v5
+- Add a `.gitignore`
 
 ## [1.0.1] - 2023-09-11
 
