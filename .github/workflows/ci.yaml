@@ -1,66 +1,89 @@
+---
 name: ci
 on:
   push:
-    branches:
-      - '**'
-    tags-ignore:
-      - '*'
   pull_request:
+    types: [ opened, ready_for_review, reopened, synchronize ]
+
+permissions: { }
+
 jobs:
   test:
+    if: ${{ ! github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-    - uses: actions/checkout@v4
-    - name: Validate the changelog
-      uses: denisa/clq-action@v1
-      id: clq-validate
-      with:
-        changeMap: .github/clq/changemap.json
-        mode: feature
-    - name: Echo changelog values
-      run: |
-        echo "$release_name"
-        echo "$release_tag -- $release_status"
-        echo "$body"
-      env:
-        release_tag: ${{ steps.clq-validate.outputs.tag }}
-        release_name: ${{ steps.clq-validate.outputs.name }}
-        release_status: ${{ steps.clq-validate.outputs.status }}
-        body: ${{ steps.clq-validate.outputs.changes }}
+      - uses: actions/checkout@v5
+      - name: "Validate the changelog"
+        uses: denisa/clq-action@v1
+        id: clq-validate
+        with:
+          changeMap: .github/clq/changemap.json
+          mode: feature
+      - name: "Echo changelog values"
+        run: |
+          {
+            echo "# Changelog"
+            echo "## ${{ steps.clq-validate.outputs.name }}"
+            echo "${{ steps.clq-validate.outputs.tag }} -- ${{ steps.clq-validate.outputs.status }}"
+            echo "${{ steps.clq-validate.outputs.changes }}"
+          } >>${GITHUB_STEP_SUMMARY}
+      - name: "Validate the tag has not yet been used"
+        uses: denisa/semantic-tag-helper@v1
+        with:
+          mode: test
+          tag: ${{ steps.clq-validate.outputs.tag }}
+  is-target-branch-protected:
+    if: ${{ ! github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    outputs:
+      yes: ${{ steps.gh-query.outputs.validate_in_list }}
+    steps:
+      - id: gh-query
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ "${RUNNER_DEBUG}" == 1 ] && set -xv
+          set -u
+          
+          if gh ruleset check --repo "${GITHUB_REPOSITORY}" "${GITHUB_BASE_REF:-$GITHUB_REF_NAME}" | grep -q context:validate-release; then
+            echo "validate_in_list=true" >>"${GITHUB_OUTPUT}"
+          fi
   validate-release:
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    if: ${{ needs.is-target-branch-protected.outputs.yes }}
+    needs: is-target-branch-protected
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-    - uses: actions/checkout@v4
-    - name: Extract tag from the changelog
-      uses: denisa/clq-action@v1
-      id: clq-extract
-      with:
-        changeMap: .github/clq/changemap.json
-        mode: release
-    - name: Validate the tag has not yet been used
-      uses: denisa/semantic-tag-helper@v1
-      with:
-        mode: test
-        tag: ${{ steps.clq-extract.outputs.tag }}
+      - uses: actions/checkout@v5
+      - name: "Extract tag from the changelog"
+        uses: denisa/clq-action@v1
+        id: clq-extract
+        with:
+          changeMap: .github/clq/changemap.json
+          mode: release
+      - name: "Validate the tag has not yet been used"
+        uses: denisa/semantic-tag-helper@v1
+        with:
+          mode: test
+          tag: ${{ steps.clq-extract.outputs.tag }}
   tag:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     needs: [ test, validate-release ]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-    - uses: actions/checkout@v4
-    - uses: denisa/clq-action@v1
-      id: clq-extract
-      with:
-        changeMap: .github/clq/changemap.json
-    - name: Create tags
-      uses: denisa/semantic-tag-helper@v1
-      with:
-        mode: set
-        tag: ${{ steps.clq-extract.outputs.tag }}
-    - uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ steps.clq-extract.outputs.tag }}
-        prerelease: ${{ steps.clq-extract.outputs.status == 'prereleased' }}
-        name: ${{ steps.clq-extract.outputs.name }}
-        body: ${{ steps.clq-extract.outputs.changes }}
+      - uses: actions/checkout@v5
+      - uses: denisa/clq-action@v1
+        id: clq-extract
+        with:
+          changeMap: .github/clq/changemap.json
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.clq-extract.outputs.tag }}
+          prerelease: ${{ steps.clq-extract.outputs.status == 'prereleased' }}
+          name: ${{ steps.clq-extract.outputs.name }}
+          body: ${{ steps.clq-extract.outputs.changes }}
