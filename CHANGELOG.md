@@ -18,11 +18,17 @@ Categories, defined in [changemap.json](.github/clq/changemap.json)):
    - `Fixed` for any bug fixes.
    - `Security` in case of vulnerabilities.
 
+## [1.0.3] - 2025-12-08
+
+### Fixed
+
+- Bumps `actions/checkout` from 5 to 6.
+
 ## [1.0.2] - 2025-08-24
 
 ### Fixed
 
-- Bump actions/checkout from v4 to v5
+- Bump `actions/checkout` from v4 to v5
 - Add a `.gitignore`
 - Rely on branch protection, not on branch name, to control build behavior
 - Skip wok on draft PR
@@ -31,7 +37,7 @@ Categories, defined in [changemap.json](.github/clq/changemap.json)):
 
 ### Fixed
 
-- Bump actions/checkout from v3 to v4
+- Bump `actions/checkout` from v3 to v4
 
 ## [1.0.0] - 2023-07-09
 
